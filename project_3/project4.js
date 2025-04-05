@@ -7,8 +7,8 @@ function GetModelViewProjection( projectionMatrix, translationX, translationY, t
 {
 	// [TO-DO] Modify the code below to form the transformation matrix.
 	var trans = [
-		1, 0, 0, 0,
-		0, 1, 0, 0,
+		rotationX, 0, 0, 0,
+		0, rotationY, 0, 0,
 		0, 0, 1, 0,
 		translationX, translationY, translationZ, 1
 	];
@@ -25,6 +25,7 @@ class MeshDrawer
 	constructor()
 	{
 		// [TO-DO] initializations
+		
 	}
 	
 	// This method is called every time the user opens an OBJ file.

@@ -102,6 +102,10 @@ function InitWebGL()
 	// Initialize settings
 	gl.clearColor(0,0,0,0);
 	gl.enable(gl.DEPTH_TEST);
+	//This is a fundamental instruction that enables depth testing, which is essential for rendering 3D scenes correctly.
+	//It tells WebGL to activate the depth buffer, which is used to keep track of the depth (z-coordinate) of every pixel rendered. 
+	//When depth testing is enabled, the GPU uses this buffer to decide whether a pixel should be drawn in front of or behind 
+	// another pixel based on its distance from the camera.
 	
 	// Initialize the programs and buffers for drawing
 	boxDrawer  = new BoxDrawer();
