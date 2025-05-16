@@ -43,7 +43,6 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 	// variables intitialization
 	vec3 color = vec3(0,0,0);
 	Ray shadowRay;
-	vec3 v = normalize(-view);
 	vec3 n = normalize(normal);
 	vec3 omega;
 	vec3 h;
@@ -54,19 +53,15 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 	for ( int i=0; i<NUM_LIGHTS; ++i ) {
 		// TO-DO: Check for shadows
 		shadowRay.dir = normalize(lights[i].position - position);
-		shadowRay.pos = position + shadowRay.dir * 0.05;
+		shadowRay.pos = position;
 		HitInfo shadowHit;
 		bool isShadowed = false;
 
-		if (IntersectRay(shadowHit, shadowRay)) {
-			if (shadowHit.t > 0.0) // True intersection with another object
-				isShadowed = true;
-		}
+		if (IntersectRay(shadowHit, shadowRay)) {return 0.0*color;}
+		
 		// TO-DO: If not shadowed, perform shading using the Blinn model
-		// normalize vectors
-		if (!isShadowed) {
 			omega = shadowRay.dir;
-			h = normalize(omega + v);
+			h = normalize(omega + view);
 			cos_theta = max(dot(n, omega), 0.0);
 			cos_fi = max(dot(n, h), 0.0);
 
@@ -74,7 +69,6 @@ vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 			vec3 specular = mtl.k_s * pow(cos_fi, mtl.n);
 
 			color += lights[i].intensity * (diffuse + specular);
-		}
 	}
 	return color;
 }
@@ -112,9 +106,10 @@ bool IntersectRay( inout HitInfo hit, Ray ray )
         float sq = sqrt(delta);
         float t1 = (-b - sq) / (2.0 * a);
         float t2 = (-b + sq) / (2.0 * a);
-        float t  = (t1 > 0.0) ? t1 : ((t2 > 0.0) ? t2 : -1.0);
+      
+		float t = t1<t2?t1:t2;
     
-		if (t > 0.0 && t < hit.t){
+		if (t > 2e-4 && t < hit.t){
 			foundHit = true;
 			hit.t = t;
 			hit.position = p + d*t;
@@ -145,13 +140,13 @@ vec4 RayTracer( Ray ray )
 			
 			// TO-DO: Initialize the reflection ray
 			r.dir = normalize(2.0 * dot(view, hit.normal) * hit.normal - view);
-			r.pos = hit.position + normalize(hit.normal) * 0.001;
+			r.pos = hit.position;
 			
 			if ( IntersectRay( h, r ) ) {
 				// TO-DO: Hit found, so shade the hit point
-				view = normalize( -r.dir);
 				clr += k_s * Shade( h.mtl, h.position, h.normal, view );
 				// TO-DO: Update the loop variables for tracing the next reflection ray
+				view = normalize( -r.dir);
 				hit = h;
 				k_s *= hit.mtl.k_s;
 			} else {
