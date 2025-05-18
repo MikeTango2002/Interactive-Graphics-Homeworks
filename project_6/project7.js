@@ -347,13 +347,95 @@ var meshFS = `
 // It updates the given positions and velocities.
 function SimTimeStep( dt, positions, velocities, springs, stiffness, damping, particleMass, gravity, restitution )
 {
-	var forces = Array( positions.length ); // The total for per particle
+	var forces = Array( positions.length ); // The total force per particle
 
 	// [TO-DO] Compute the total force of each particle
+
+	// compute gravity force of each particle
+	for (var particle = 0; particle < positions.length; ++particle){
+		forces[particle] = new Vec3()
+		forces[particle].set(gravity.mul(particleMass));
+	}
+
+	// compute springs forces fS, fD for each particle
+	for (var spring = 0; spring < springs.length; ++spring){
+		var rest_len = springs[spring].rest;
+		var p0 = springs[spring].p0;
+		var p1 = springs[spring].p1;
+
+		var x0 = positions[p0];
+		var x1 = positions[p1];
+
+		var curr_len = (x0.sub(x1)).len();
+		var spring_dir = (x1.sub(x0)).div(curr_len);
+
+		var fS_p0 = spring_dir.mul(stiffness * (curr_len - rest_len));
+
+		var v0 = velocities[p0];
+		var v1 = velocities[p1];
+
+		var l_dot = (v1.sub(v0)).dot(spring_dir);
+
+		var fD_p0 = (spring_dir).mul(damping * l_dot);
+
+		forces[p0].inc(fS_p0);
+		forces[p0].inc(fD_p0);
+
+		// f_p1 = - f_p0
+		forces[p1].dec(fS_p0);
+		forces[p1].dec(fD_p0);
+		
+	}
 	
 	// [TO-DO] Update positions and velocities
+
+	for (var particle = 0; particle < positions.length; ++particle){
+		var acc = forces[particle].div(particleMass);
+		velocities[particle].inc(acc.mul(dt));
+		positions[particle].inc(velocities[particle].mul(dt));
+	}
 	
 	// [TO-DO] Handle collisions
+	for (var particle = 0; particle < positions.length; ++particle) {
+	
+	    var x = positions[particle].x;
+	    var y = positions[particle].y;
+	    var z = positions[particle].z;
+
+	    // X-axis collision
+	    if (x < -1.0) {
+	        let penetration = -1.0 - x;
+	        positions[particle].x = -1.0 + penetration * restitution;
+	        velocities[particle].x = -velocities[particle].x * restitution;
+	    } else if (x > 1.0) {
+	        let penetration = x - 1.0;
+	        positions[particle].x = 1.0 - penetration * restitution;
+	        velocities[particle].x = -velocities[particle].x * restitution;
+	    }
+
+	    // Y-axis collision
+	    if (y < -1.0) {
+	        let penetration = -1.0 - y;
+	        positions[particle].y = -1.0 + penetration * restitution;
+	        velocities[particle].y = -velocities[particle].y * restitution;
+	    } else if (y > 1.0) {
+	        let penetration = y - 1.0;
+	        positions[particle].y = 1.0 - penetration * restitution;
+	        velocities[particle].y = -velocities[particle].y * restitution;
+	    }
+
+	    // Z-axis collision
+	    if (z < -1.0) {
+	        let penetration = -1.0 - z;
+	        positions[particle].z = -1.0 + penetration * restitution;
+	        velocities[particle].z = -velocities[particle].z * restitution;
+	    } else if (z > 1.0) {
+	        let penetration = z - 1.0;
+	        positions[particle].z = 1.0 - penetration * restitution;
+	        velocities[particle].z = -velocities[particle].z * restitution;
+	    }
+	}
+
 	
 }
 
